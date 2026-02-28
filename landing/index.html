@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Producer — ранний доступ для creators</title>
+  <meta name="description" content="Получите ранний доступ к AI Producer: превращайте идеи в контент-план, закрывайте возражения перед публикацией и публикуйте стабильно.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="top-strip" role="status" aria-live="polite">
+    <div class="container top-strip__inner">
+      <p><strong>Early Access:</strong> набор в когорту закрывается <span id="deadline-date">15 марта 2026</span>. Осталось <span id="seats-left">28</span> мест.</p>
+    </div>
+  </div>
+
+  <header class="container site-header">
+    <a class="logo" href="#top" aria-label="AI Producer — на главную">AI Producer</a>
+    <a class="btn btn-secondary" href="#lead-form" data-track="hero-cta">Подать заявку</a>
+  </header>
+
+  <main id="top">
+    <section class="hero container" aria-labelledby="hero-title">
+      <div class="hero__copy reveal" data-delay="0">
+        <p class="chip">Для creators, которые хотят расти предсказуемо</p>
+        <h1 id="hero-title">Контент-план и разбор роликов, которые превращают просмотры в рост</h1>
+        <p class="hero__sub">AI Producer помогает за 10 минут собрать недельный план, убрать слабые места в роликах и не срываться с графика публикаций.</p>
+        <ul class="hero__bullets" aria-label="Ключевые выгоды">
+          <li>Фокус на конвертирующие темы, а не случайные идеи</li>
+          <li>Подсказки по структуре ролика до публикации</li>
+          <li>Система напоминаний, чтобы удерживать ритм</li>
+        </ul>
+        <div class="hero__actions">
+          <a class="btn btn-primary" href="#lead-form" data-track="hero-cta">Получить ранний доступ</a>
+          <a class="btn btn-ghost" href="#how-it-works">Смотреть 3 шага</a>
+        </div>
+      </div>
+
+      <aside class="lead-card reveal" data-delay="120" aria-label="Форма заявки на ранний доступ">
+        <h2>Заявка на ранний доступ</h2>
+        <p>Оставьте минимум данных. Ответим на email с датой подключения и next steps.</p>
+
+        <form id="lead-form" class="lead-form" action="/api/v1/landing/lead" method="post" data-endpoint="/api/v1/landing/lead" novalidate>
+          <div class="field-group">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-error" placeholder="you@example.com">
+            <p id="email-error" class="field-error" aria-live="polite"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="niche">Ниша</label>
+            <select id="niche" name="niche" required aria-describedby="niche-error">
+              <option value="">Выберите нишу</option>
+              <option value="education">Education</option>
+              <option value="fitness">Fitness</option>
+              <option value="beauty">Beauty</option>
+              <option value="business">Business</option>
+              <option value="lifestyle">Lifestyle</option>
+              <option value="other">Другое</option>
+            </select>
+            <p id="niche-error" class="field-error" aria-live="polite"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="audience_size">Размер аудитории</label>
+            <select id="audience_size" name="audience_size" required aria-describedby="audience-error">
+              <option value="">Выберите диапазон</option>
+              <option value="0-10k">0-10k</option>
+              <option value="10k-100k">10k-100k</option>
+              <option value="100k-1m">100k-1m</option>
+              <option value="1m+">1m+</option>
+            </select>
+            <p id="audience-error" class="field-error" aria-live="polite"></p>
+          </div>
+
+          <input type="hidden" name="utm_source">
+          <input type="hidden" name="utm_medium">
+          <input type="hidden" name="utm_campaign">
+          <input type="hidden" name="utm_term">
+          <input type="hidden" name="utm_content">
+          <input type="hidden" name="landing_page">
+          <input type="hidden" name="referrer">
+
+          <button type="submit" class="btn btn-primary btn-full">Встать в waitlist</button>
+          <p class="fineprint">Нажимая кнопку, вы соглашаетесь получить письмо о доступе к beta.</p>
+          <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </aside>
+    </section>
+
+    <section class="section container" id="problem-solution" aria-labelledby="problem-title">
+      <div class="section-head reveal" data-delay="0">
+        <p class="chip">Problem -> Solution</p>
+        <h2 id="problem-title">Почему creators теряют рост и как это закрывает AI Producer</h2>
+      </div>
+      <div class="pain-solution-grid">
+        <article class="split-card reveal" data-delay="60">
+          <h3>Боль: хаос в идеях</h3>
+          <p>Публикации выходят нерегулярно, темы не связаны между собой, нет предсказуемого результата.</p>
+          <div class="split-card__solution">Решение: AI-бриф + недельный контент-план с приоритетами по цели.</div>
+        </article>
+        <article class="split-card reveal" data-delay="140">
+          <h3>Боль: слабый хук и удержание</h3>
+          <p>Ролик снимается, но зритель уходит в первые секунды, вовлечение проседает.</p>
+          <div class="split-card__solution">Решение: pre-publish разбор структуры, CTA и риска потери досмотра.</div>
+        </article>
+        <article class="split-card reveal" data-delay="220">
+          <h3>Боль: срыв ритма</h3>
+          <p>Без системы даже сильные идеи не доходят до публикации и не собирают серию касаний.</p>
+          <div class="split-card__solution">Решение: календарь публикаций и reminders для стабильной частоты.</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-tint" id="how-it-works" aria-labelledby="steps-title">
+      <div class="container">
+        <div class="section-head reveal" data-delay="0">
+          <p class="chip">How it works</p>
+          <h2 id="steps-title">3 шага: что произойдет после заявки</h2>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card reveal" data-delay="40">
+            <span class="step-index">01</span>
+            <h3>Подтверждаем fit</h3>
+            <p>Проверяем нишу и объем аудитории, чтобы дать релевантный onboarding-пакет.</p>
+          </article>
+          <article class="step-card reveal" data-delay="120">
+            <span class="step-index">02</span>
+            <h3>Даем доступ к beta</h3>
+            <p>Отправляем приглашение и стартовый сценарий работы с контент-планом.</p>
+          </article>
+          <article class="step-card reveal" data-delay="200">
+            <span class="step-index">03</span>
+            <h3>Запускаем первую неделю</h3>
+            <p>Вы выходите в регулярные публикации и получаете первые сигналы роста метрик.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container" id="social-proof" aria-labelledby="proof-title">
+      <div class="section-head reveal" data-delay="0">
+        <p class="chip">Social proof</p>
+        <h2 id="proof-title">Реалистичные результаты beta creators</h2>
+      </div>
+
+      <div class="metrics-strip reveal" data-delay="50" aria-label="Метрики пилотной группы">
+        <div>
+          <strong>+31%</strong>
+          <span>средний рост досмотра за 4 недели</span>
+        </div>
+        <div>
+          <strong>2.4x</strong>
+          <span>больше публикаций в месяц</span>
+        </div>
+        <div>
+          <strong>74%</strong>
+          <span>дошли до 8+ роликов без срыва ритма</span>
+        </div>
+      </div>
+
+      <div class="testimonials-grid">
+        <article class="quote-card reveal" data-delay="60">
+          <p>"Перестал тратить часы на выбор темы. План на неделю появляется за один подход."</p>
+          <span>Creator, Education (42k)</span>
+        </article>
+        <article class="quote-card reveal" data-delay="140">
+          <p>"Сценарии стали короче и четче, удержание в первые 15 секунд выросло почти сразу."</p>
+          <span>Creator, Fitness (118k)</span>
+        </article>
+        <article class="quote-card reveal" data-delay="220">
+          <p>"Главная ценность - дисциплина публикаций. Напоминания спасли от откатов."</p>
+          <span>Creator, Lifestyle (9k)</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section container" id="offer" aria-labelledby="offer-title">
+      <div class="offer-card reveal" data-delay="0">
+        <p class="chip chip-inverse">Offer / Scarcity</p>
+        <h2 id="offer-title">Когорта раннего доступа ограничена: 30 мест до 15 марта 2026</h2>
+        <p>Приоритет получат creators, которые готовы запустить первую контент-неделю в течение 7 дней после инвайта.</p>
+        <a class="btn btn-primary" href="#lead-form" data-track="hero-cta">Забронировать место</a>
+      </div>
+    </section>
+
+    <section class="section container" id="faq" aria-labelledby="faq-title">
+      <div class="section-head reveal" data-delay="0">
+        <p class="chip">FAQ</p>
+        <h2 id="faq-title">Ключевые возражения перед заявкой</h2>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item reveal" data-delay="40">
+          <summary>Это работает только для крупных блогеров?</summary>
+          <p>Нет, ранний доступ ориентирован на creators от 0 до 100k+, где особенно важны система и регулярность.</p>
+        </details>
+        <details class="faq-item reveal" data-delay="90">
+          <summary>Сколько времени нужно в неделю?</summary>
+          <p>Обычно 60-90 минут на планирование и разбор роликов. Дальше система ведет через напоминания.</p>
+        </details>
+        <details class="faq-item reveal" data-delay="140">
+          <summary>Нужно подключать все соцсети?</summary>
+          <p>Нет, начинаем с одной ключевой платформы, чтобы быстрее увидеть эффект в метриках.</p>
+        </details>
+        <details class="faq-item reveal" data-delay="190">
+          <summary>Что если beta мне не подойдет?</summary>
+          <p>Вы сможете отказаться после первого цикла без обязательств; цель раннего доступа - собрать честный фидбек.</p>
+        </details>
+        <details class="faq-item reveal" data-delay="240">
+          <summary>Когда я получу ответ после формы?</summary>
+          <p>Обычно в течение 24-72 часов на email, который вы указали в заявке.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="section final-cta" aria-labelledby="final-cta-title">
+      <div class="container final-cta__box reveal" data-delay="0">
+        <p class="chip chip-inverse">Final CTA</p>
+        <h2 id="final-cta-title">Готовы превратить трафик в лиды и стабильный контент-ритм?</h2>
+        <p>Оставьте заявку сейчас, пока набор в когорту не закрыт.</p>
+        <a class="btn btn-primary" href="#lead-form" data-track="hero-cta">Подать заявку на ранний доступ</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container site-footer">
+    <p>© 2026 AI Producer. Beta landing v1.</p>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>
