@@ -1,6 +1,6 @@
 # ProdApp MVP TODO (Этапы + Эпики)
 
-Last update: 2026-02-28
+Last update: 2026-03-01
 Owner: Leo + Codex
 
 Статусы:
@@ -111,6 +111,16 @@ Owner: Leo + Codex
 - [ ] Follow-up phase 2: A/B тесты оффера/CTA/соцдоказательства (headline, proof density, CTA copy, form position).
 - [ ] Follow-up phase 2: подключить real submit API + server-side валидацию + anti-spam.
 - [ ] Follow-up phase 2: включить production analytics (Mixpanel/warehouse) и dashboard по funnel `landing_view -> cta_click -> form_start -> submit_success`.
+
+## Эпик: landing-conversion-page-v1 (follow-up backlog)
+- [~] Статус: in progress
+- [x] Добавить debug viewer событий: `GET /api/analytics-debug/view`.
+- [x] Добавить кнопку `Clear events` и endpoint `POST /api/analytics-debug/clear`.
+- [ ] Проверить delivery ивентов в Mixpanel на production домене (не localhost) и зафиксировать smoke-proof (скриншоты `track`/`engage` запросов + Live View).
+- [ ] Подготовить deployment-runbook лендинга под домен (DNS, SSL, rollback) с чеклистом preflight/post-deploy.
+- [ ] Добавить UTM QA-чеклист: `utm_source/medium/campaign/content/term` от URL до payload событий/submit.
+- [ ] Добавить alerting/health-check для submit endpoint и базовый daily контроль конверсии (`views`, `cta_click`, `submit_success`).
+- [ ] Вынести PII-политику для аналитики: решить, оставляем ли `email` в event props или хешируем перед отправкой.
 
 ## Этап 4: Стабилизация + релиз (15–21 мар)
 - [ ] Тесты критичных флоу (backend + iOS).

@@ -1,0 +1,7 @@
+.DS_Store
+ai-producer-backend/
+ai-producer-ios/
+landing/.DS_Store
+landing/data/*.json
+landing/data/*.jsonl
+!landing/data/.gitkeep

@@ -1,235 +1,296 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Producer — ранний доступ для creators</title>
-  <meta name="description" content="Получите ранний доступ к AI Producer: превращайте идеи в контент-план, закрывайте возражения перед публикацией и публикуйте стабильно.">
+  <title>Production - Personal AI Producer</title>
+  <meta name="description" content="Become viral with your personal AI producer.">
+  <meta name="mixpanel-token-dev" content="a553f35409783099e770b1756f90da5f">
+  <meta name="mixpanel-token-stage" content="49c7b108b9f97a1157bca051c7534070">
+  <meta name="mixpanel-token-prod" content="df6210d59eda0afe2b086bfb8719dc25">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css?v=20260301-1835">
+  <script src="https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"></script>
 </head>
 <body>
-  <div class="top-strip" role="status" aria-live="polite">
-    <div class="container top-strip__inner">
-      <p><strong>Early Access:</strong> набор в когорту закрывается <span id="deadline-date">15 марта 2026</span>. Осталось <span id="seats-left">28</span> мест.</p>
+  <div class="page-shell">
+    <header class="site-header container">
+      <a class="brand" href="#" aria-label="Production home">
+        <img class="brand-logo" src="./assets/logo.png" alt="Production logo">
+        <span class="brand-text">Production</span>
+      </a>
+      <nav class="main-nav" aria-label="Main">
+        <a href="#how-it-works">How it Works</a>
+        <a href="#reviews">Reviews</a>
+      </nav>
+      <div class="header-actions">
+        <a class="btn btn-white" href="#" data-open-beta-modal="true" data-cta-id="hero_top" data-cta-section="hero">Start Growing Free</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero container" id="hero">
+        <div class="hero-copy">
+          <img class="hero-app-icon" src="./assets/app-icon.svg" alt="Production app icon">
+          <p class="live-badge">NEW: V2 SCRIPT ENGINE NOW LIVE</p>
+          <h1>
+            Become Viral
+            <span>With Your</span>
+            <span class="gradient-text">Personal AI</span>
+            <span class="gradient-text">Producer</span>
+          </h1>
+          <p class="hero-subtext">
+            Stop guessing. Our AI scans real-time trends, writes high-retention scripts, and manages your growth strategy while you focus on creating.
+          </p>
+          <div class="hero-cta-row">
+            <a class="btn btn-blue" href="#" data-open-beta-modal="true" data-cta-id="hero_main" data-cta-section="hero">Start Growing Free</a>
+            <div class="avatar-stack" aria-label="Joined creators">
+              <span class="avatar avatar-1"></span>
+              <span class="avatar avatar-2"></span>
+              <span class="avatar avatar-3"></span>
+              <span class="joined-copy">Join by 10,000+ Creators</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="insight-card">
+            <div class="insight-head">
+              <strong>Weekly Insights</strong>
+              <span>+214% Growth</span>
+            </div>
+            <div class="bar-chart" aria-hidden="true">
+              <span style="--h:40px"></span>
+              <span style="--h:78px"></span>
+              <span style="--h:96px"></span>
+              <span style="--h:172px"></span>
+              <span style="--h:228px"></span>
+            </div>
+            <div class="insight-stats">
+              <div>
+                <small>View Retention</small>
+                <strong>68.4%</strong>
+              </div>
+              <div>
+                <small>Top Trend</small>
+                <strong>AI Avatars</strong>
+              </div>
+            </div>
+            <span class="insight-pill">Viral Script Generated</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="problem" id="problem">
+        <div class="container">
+          <h2>
+            Most creators don't fail because of talent.<br>
+            <span>They fail because they don't have a producer.</span>
+          </h2>
+          <div class="problem-grid">
+            <article class="problem-card">
+              <div class="icon icon-red" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 4 3.7 19h16.6L12 4Zm0 5.2v4.2m0 2.5h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <h3>Random Posting</h3>
+              <p>Uploading without a data-backed strategy is like throwing darts in the dark.</p>
+            </article>
+            <article class="problem-card">
+              <div class="icon icon-amber" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.6" stroke="currentColor" stroke-width="1.7"/><path d="M3.3 12s3-5.8 8.7-5.8 8.7 5.8 8.7 5.8-3 5.8-8.7 5.8-8.7-5.8-8.7-5.8Z" stroke="currentColor" stroke-width="1.7"/></svg>
+              </div>
+              <h3>Trend Blindness</h3>
+              <p>Missing out on what waves before they peak because you're busy filming.</p>
+            </article>
+            <article class="problem-card">
+              <div class="icon icon-purple" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M10 14l10-10M20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <h3>Script Blocks</h3>
+              <p>Staring at a blank page for hours instead of recording content that converts.</p>
+            </article>
+            <article class="problem-card">
+              <div class="icon icon-blue" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="12" width="3" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="10.5" y="8" width="3" height="11" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="17" y="5" width="3" height="14" rx="1" stroke="currentColor" stroke-width="1.7"/></svg>
+              </div>
+              <h3>Growth Stalls</h3>
+              <p>Numbers always flat because you are not analyzing what actually works.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="system" id="how-it-works">
+        <div class="container system-layout">
+          <div class="system-copy">
+            <h2>The 4-Step Production System</h2>
+            <ol>
+              <li>
+                <span>1</span>
+                <div>
+                  <h3>AI Trend Scanner</h3>
+                  <p>Our engine scans millions of videos daily to identify rising trends before they hit the mainstream.</p>
+                </div>
+              </li>
+              <li>
+                <span>2</span>
+                <div>
+                  <h3>Viral Script Generator</h3>
+                  <p>Optimized hooks, storytelling beats, and CTAs to grow specifically to your audience and niche.</p>
+                </div>
+              </li>
+              <li>
+                <span>3</span>
+                <div>
+                  <h3>Video Performance Analyzer</h3>
+                  <p>Upload your videos for AI feedback on pacing, visuals, and retention-killing segments.</p>
+                </div>
+              </li>
+              <li>
+                <span>4</span>
+                <div>
+                  <h3>Smart Growth Scheduler</h3>
+                  <p>Post exactly when your audience is most likely to binge-watch your content.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+          <div class="system-visual" aria-hidden="true">
+            <div class="window-frame">
+              <div class="window-top">
+                <span></span><span></span><span></span>
+                <small>LIVE TREND MONITOR</small>
+              </div>
+              <div class="window-core">
+                <svg class="trend-line" viewBox="0 0 520 220" aria-hidden="true">
+                  <polyline class="trend-line__path" points="70,175 165,95 228,148 300,108 382,58" />
+                </svg>
+                <div class="trend-stars" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <div class="trend-glow"></div>
+                <div class="trend-dot"></div>
+                <div class="radar-tag">TREND DETECTED</div>
+              </div>
+              <div class="window-lines">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats" id="reviews">
+        <div class="container">
+          <div class="stat-grid">
+            <article>
+              <strong>+47%</strong>
+              <span>WATCH TIME INCREASE</span>
+            </article>
+            <article>
+              <strong>2X</strong>
+              <span>FASTER GROWTH RATE</span>
+            </article>
+            <article>
+              <strong>30%</strong>
+              <span>BETTER HOOK RETENTION</span>
+            </article>
+          </div>
+
+          <p class="quote">"The edge I needed to go from 10K to 1M."</p>
+
+          <div class="testimonial-grid">
+            <article class="testimonial-card">
+              <header>
+                <span class="person avatar-1"></span>
+                <div>
+                  <strong>Alex Rivera</strong>
+                  <small>Tech Creator - 450k Subs</small>
+                  <p class="review-stars" aria-label="5 out of 5 stars">★★★★★</p>
+                </div>
+              </header>
+              <p>"Production tells me exactly what to film next. The hooks got sharper and watch time jumped fast."</p>
+            </article>
+            <article class="testimonial-card">
+              <header>
+                <span class="person avatar-2"></span>
+                <div>
+                  <strong>Sarah Chen</strong>
+                  <small>Lifestyle Creator - 1.2M Subs</small>
+                  <p class="review-stars" aria-label="5 out of 5 stars">★★★★★</p>
+                </div>
+              </header>
+              <p>"I was skeptical at first, but it consistently gives strong openings and emotional hooks that perform."</p>
+            </article>
+            <article class="testimonial-card">
+              <header>
+                <span class="person avatar-3"></span>
+                <div>
+                  <strong>Markus Webb</strong>
+                  <small>Gaming Creator - 200k Subs</small>
+                  <p class="review-stars" aria-label="5 out of 5 stars">★★★★★</p>
+                </div>
+              </header>
+              <p>"No more guessing. Trend signals come early, so I publish before competitors even catch the topic."</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta" id="final-cta">
+        <div class="container final-box">
+          <h2>
+            You Don't Need Luck.<br>
+            <span>You Need a Producer.</span>
+          </h2>
+          <p>Join thousands of creators who turned their hobbies into full-time careers.</p>
+          <a class="btn btn-white large" href="#" data-open-beta-modal="true" data-cta-id="final_cta" data-cta-section="final_cta">Start Growing Free Today</a>
+          <small>No credit card required - Cancel anytime.</small>
+        </div>
+        <p class="results-disclaimer container">
+          Results shown on this page are based on internal testing. Actual results may vary.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer container">
+      <a class="brand" href="#" aria-label="Production home">
+        <img class="brand-logo" src="./assets/logo.png" alt="Production logo">
+        <span class="brand-text">Production</span>
+      </a>
+      <nav aria-label="Footer">
+        <a href="#" data-link-name="privacy">Privacy</a>
+        <a href="#" data-link-name="terms">Terms</a>
+        <a href="#" data-link-name="features">Features</a>
+      </nav>
+      <p>© 2026 Production AI. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <div class="beta-modal" id="beta-modal" hidden>
+    <div class="beta-modal__overlay" data-close-beta-modal="true"></div>
+    <div class="beta-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="beta-modal-title">
+      <button type="button" class="beta-modal__close" aria-label="Close" data-close-beta-modal="true">×</button>
+      <h3 id="beta-modal-title">Join the Waitlist</h3>
+      <p>
+        We are currently in testing. Our app will be available on the App Store soon.
+        We will notify you by email as soon as it goes live.
+      </p>
+      <form id="beta-email-form" class="beta-modal__form" novalidate>
+        <label for="beta-email">Email address</label>
+        <input id="beta-email" name="email" type="email" placeholder="you@example.com" required>
+        <button type="submit" class="btn btn-blue">Notify Me</button>
+        <p class="beta-modal__status" id="beta-modal-status" aria-live="polite"></p>
+      </form>
     </div>
   </div>
 
-  <header class="container site-header">
-    <a class="logo" href="#top" aria-label="AI Producer — на главную">AI Producer</a>
-    <a class="btn btn-secondary" href="#lead-form" data-track="hero-cta">Подать заявку</a>
-  </header>
-
-  <main id="top">
-    <section class="hero container" aria-labelledby="hero-title">
-      <div class="hero__copy reveal" data-delay="0">
-        <p class="chip">Для creators, которые хотят расти предсказуемо</p>
-        <h1 id="hero-title">Контент-план и разбор роликов, которые превращают просмотры в рост</h1>
-        <p class="hero__sub">AI Producer помогает за 10 минут собрать недельный план, убрать слабые места в роликах и не срываться с графика публикаций.</p>
-        <ul class="hero__bullets" aria-label="Ключевые выгоды">
-          <li>Фокус на конвертирующие темы, а не случайные идеи</li>
-          <li>Подсказки по структуре ролика до публикации</li>
-          <li>Система напоминаний, чтобы удерживать ритм</li>
-        </ul>
-        <div class="hero__actions">
-          <a class="btn btn-primary" href="#lead-form" data-track="hero-cta">Получить ранний доступ</a>
-          <a class="btn btn-ghost" href="#how-it-works">Смотреть 3 шага</a>
-        </div>
-      </div>
-
-      <aside class="lead-card reveal" data-delay="120" aria-label="Форма заявки на ранний доступ">
-        <h2>Заявка на ранний доступ</h2>
-        <p>Оставьте минимум данных. Ответим на email с датой подключения и next steps.</p>
-
-        <form id="lead-form" class="lead-form" action="/api/v1/landing/lead" method="post" data-endpoint="/api/v1/landing/lead" novalidate>
-          <div class="field-group">
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-error" placeholder="you@example.com">
-            <p id="email-error" class="field-error" aria-live="polite"></p>
-          </div>
-
-          <div class="field-group">
-            <label for="niche">Ниша</label>
-            <select id="niche" name="niche" required aria-describedby="niche-error">
-              <option value="">Выберите нишу</option>
-              <option value="education">Education</option>
-              <option value="fitness">Fitness</option>
-              <option value="beauty">Beauty</option>
-              <option value="business">Business</option>
-              <option value="lifestyle">Lifestyle</option>
-              <option value="other">Другое</option>
-            </select>
-            <p id="niche-error" class="field-error" aria-live="polite"></p>
-          </div>
-
-          <div class="field-group">
-            <label for="audience_size">Размер аудитории</label>
-            <select id="audience_size" name="audience_size" required aria-describedby="audience-error">
-              <option value="">Выберите диапазон</option>
-              <option value="0-10k">0-10k</option>
-              <option value="10k-100k">10k-100k</option>
-              <option value="100k-1m">100k-1m</option>
-              <option value="1m+">1m+</option>
-            </select>
-            <p id="audience-error" class="field-error" aria-live="polite"></p>
-          </div>
-
-          <input type="hidden" name="utm_source">
-          <input type="hidden" name="utm_medium">
-          <input type="hidden" name="utm_campaign">
-          <input type="hidden" name="utm_term">
-          <input type="hidden" name="utm_content">
-          <input type="hidden" name="landing_page">
-          <input type="hidden" name="referrer">
-
-          <button type="submit" class="btn btn-primary btn-full">Встать в waitlist</button>
-          <p class="fineprint">Нажимая кнопку, вы соглашаетесь получить письмо о доступе к beta.</p>
-          <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
-        </form>
-      </aside>
-    </section>
-
-    <section class="section container" id="problem-solution" aria-labelledby="problem-title">
-      <div class="section-head reveal" data-delay="0">
-        <p class="chip">Problem -> Solution</p>
-        <h2 id="problem-title">Почему creators теряют рост и как это закрывает AI Producer</h2>
-      </div>
-      <div class="pain-solution-grid">
-        <article class="split-card reveal" data-delay="60">
-          <h3>Боль: хаос в идеях</h3>
-          <p>Публикации выходят нерегулярно, темы не связаны между собой, нет предсказуемого результата.</p>
-          <div class="split-card__solution">Решение: AI-бриф + недельный контент-план с приоритетами по цели.</div>
-        </article>
-        <article class="split-card reveal" data-delay="140">
-          <h3>Боль: слабый хук и удержание</h3>
-          <p>Ролик снимается, но зритель уходит в первые секунды, вовлечение проседает.</p>
-          <div class="split-card__solution">Решение: pre-publish разбор структуры, CTA и риска потери досмотра.</div>
-        </article>
-        <article class="split-card reveal" data-delay="220">
-          <h3>Боль: срыв ритма</h3>
-          <p>Без системы даже сильные идеи не доходят до публикации и не собирают серию касаний.</p>
-          <div class="split-card__solution">Решение: календарь публикаций и reminders для стабильной частоты.</div>
-        </article>
-      </div>
-    </section>
-
-    <section class="section section-tint" id="how-it-works" aria-labelledby="steps-title">
-      <div class="container">
-        <div class="section-head reveal" data-delay="0">
-          <p class="chip">How it works</p>
-          <h2 id="steps-title">3 шага: что произойдет после заявки</h2>
-        </div>
-        <div class="steps-grid">
-          <article class="step-card reveal" data-delay="40">
-            <span class="step-index">01</span>
-            <h3>Подтверждаем fit</h3>
-            <p>Проверяем нишу и объем аудитории, чтобы дать релевантный onboarding-пакет.</p>
-          </article>
-          <article class="step-card reveal" data-delay="120">
-            <span class="step-index">02</span>
-            <h3>Даем доступ к beta</h3>
-            <p>Отправляем приглашение и стартовый сценарий работы с контент-планом.</p>
-          </article>
-          <article class="step-card reveal" data-delay="200">
-            <span class="step-index">03</span>
-            <h3>Запускаем первую неделю</h3>
-            <p>Вы выходите в регулярные публикации и получаете первые сигналы роста метрик.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section container" id="social-proof" aria-labelledby="proof-title">
-      <div class="section-head reveal" data-delay="0">
-        <p class="chip">Social proof</p>
-        <h2 id="proof-title">Реалистичные результаты beta creators</h2>
-      </div>
-
-      <div class="metrics-strip reveal" data-delay="50" aria-label="Метрики пилотной группы">
-        <div>
-          <strong>+31%</strong>
-          <span>средний рост досмотра за 4 недели</span>
-        </div>
-        <div>
-          <strong>2.4x</strong>
-          <span>больше публикаций в месяц</span>
-        </div>
-        <div>
-          <strong>74%</strong>
-          <span>дошли до 8+ роликов без срыва ритма</span>
-        </div>
-      </div>
-
-      <div class="testimonials-grid">
-        <article class="quote-card reveal" data-delay="60">
-          <p>"Перестал тратить часы на выбор темы. План на неделю появляется за один подход."</p>
-          <span>Creator, Education (42k)</span>
-        </article>
-        <article class="quote-card reveal" data-delay="140">
-          <p>"Сценарии стали короче и четче, удержание в первые 15 секунд выросло почти сразу."</p>
-          <span>Creator, Fitness (118k)</span>
-        </article>
-        <article class="quote-card reveal" data-delay="220">
-          <p>"Главная ценность - дисциплина публикаций. Напоминания спасли от откатов."</p>
-          <span>Creator, Lifestyle (9k)</span>
-        </article>
-      </div>
-    </section>
-
-    <section class="section container" id="offer" aria-labelledby="offer-title">
-      <div class="offer-card reveal" data-delay="0">
-        <p class="chip chip-inverse">Offer / Scarcity</p>
-        <h2 id="offer-title">Когорта раннего доступа ограничена: 30 мест до 15 марта 2026</h2>
-        <p>Приоритет получат creators, которые готовы запустить первую контент-неделю в течение 7 дней после инвайта.</p>
-        <a class="btn btn-primary" href="#lead-form" data-track="hero-cta">Забронировать место</a>
-      </div>
-    </section>
-
-    <section class="section container" id="faq" aria-labelledby="faq-title">
-      <div class="section-head reveal" data-delay="0">
-        <p class="chip">FAQ</p>
-        <h2 id="faq-title">Ключевые возражения перед заявкой</h2>
-      </div>
-      <div class="faq-list">
-        <details class="faq-item reveal" data-delay="40">
-          <summary>Это работает только для крупных блогеров?</summary>
-          <p>Нет, ранний доступ ориентирован на creators от 0 до 100k+, где особенно важны система и регулярность.</p>
-        </details>
-        <details class="faq-item reveal" data-delay="90">
-          <summary>Сколько времени нужно в неделю?</summary>
-          <p>Обычно 60-90 минут на планирование и разбор роликов. Дальше система ведет через напоминания.</p>
-        </details>
-        <details class="faq-item reveal" data-delay="140">
-          <summary>Нужно подключать все соцсети?</summary>
-          <p>Нет, начинаем с одной ключевой платформы, чтобы быстрее увидеть эффект в метриках.</p>
-        </details>
-        <details class="faq-item reveal" data-delay="190">
-          <summary>Что если beta мне не подойдет?</summary>
-          <p>Вы сможете отказаться после первого цикла без обязательств; цель раннего доступа - собрать честный фидбек.</p>
-        </details>
-        <details class="faq-item reveal" data-delay="240">
-          <summary>Когда я получу ответ после формы?</summary>
-          <p>Обычно в течение 24-72 часов на email, который вы указали в заявке.</p>
-        </details>
-      </div>
-    </section>
-
-    <section class="section final-cta" aria-labelledby="final-cta-title">
-      <div class="container final-cta__box reveal" data-delay="0">
-        <p class="chip chip-inverse">Final CTA</p>
-        <h2 id="final-cta-title">Готовы превратить трафик в лиды и стабильный контент-ритм?</h2>
-        <p>Оставьте заявку сейчас, пока набор в когорту не закрыт.</p>
-        <a class="btn btn-primary" href="#lead-form" data-track="hero-cta">Подать заявку на ранний доступ</a>
-      </div>
-    </section>
-  </main>
-
-  <footer class="container site-footer">
-    <p>© 2026 AI Producer. Beta landing v1.</p>
-  </footer>
-
-  <script src="./script.js"></script>
+  <script src="./script.js?v=20260301-1955"></script>
 </body>
 </html>

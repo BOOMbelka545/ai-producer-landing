@@ -12,12 +12,17 @@
    ```bash
    cd /Users/leo/Desktop/Production/landing
    ```
-2. Запустите простой HTTP-сервер (пример):
+2. Запустите landing-сервер с сохранением waitlist:
+   ```bash
+   python3 server.py
+   ```
+3. Откройте в браузере:
+   - `http://127.0.0.1:8081`
+
+Если нужен только статика-режим (без сохранения email), можно запустить:
    ```bash
    python3 -m http.server 8080
    ```
-3. Откройте в браузере:
-   - `http://localhost:8080`
 
 Можно тестировать UTM так:
 - `http://localhost:8080/?utm_source=meta&utm_medium=cpc&utm_campaign=early_access&utm_term=creator&utm_content=ad_a`
@@ -55,3 +60,8 @@
 
 Сейчас это TODO hooks: при отсутствии Mixpanel/analytics события логируются в `console.info`.
 Для production аналитики замените `trackEvent()` на ваш клиент (например Mixpanel SDK).
+
+## Где хранится waitlist (JSON)
+- Локальный waitlist сохраняется в:
+  - `/Users/leo/Desktop/Production/landing/data/waitlist.json`
+- Формат: JSON array (`[{ email, source, submitted_at }, ...]`), можно читать напрямую любым редактором.
