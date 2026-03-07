@@ -32,13 +32,15 @@ jobs:
       CDN_INVALIDATION_URL: ${{ secrets.LANDING_CDN_INVALIDATION_URL }}
       CDN_INVALIDATION_TOKEN: ${{ secrets.LANDING_CDN_INVALIDATION_TOKEN }}
       NOTIFY_WEBHOOK_URL: ${{ secrets.LANDING_NOTIFY_WEBHOOK_URL }}
+      TG_BOT_TOKEN: ${{ secrets.LANDING_TG_BOT_TOKEN }}
+      TG_CHAT_ID: ${{ secrets.LANDING_TG_CHAT_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Validate required secrets
         run: |
-          required=(DEPLOY_HOST DEPLOY_USER DEPLOY_PATH SITE_URL CDN_INVALIDATION_URL)
+          required=(DEPLOY_HOST DEPLOY_USER DEPLOY_PATH SITE_URL)
           for key in "${required[@]}"; do
             if [ -z "${!key:-}" ]; then
               echo "Missing required secret: $key"
@@ -97,7 +99,9 @@ jobs:
 
       - name: Invalidate CDN/cache
         run: |
-          if [ -n "${CDN_INVALIDATION_TOKEN:-}" ]; then
+          if [ -z "${CDN_INVALIDATION_URL:-}" ]; then
+            echo "CDN invalidation skipped: LANDING_CDN_INVALIDATION_URL is not set"
+          elif [ -n "${CDN_INVALIDATION_TOKEN:-}" ]; then
             curl -fsS -X POST "$CDN_INVALIDATION_URL" -H "Authorization: Bearer $CDN_INVALIDATION_TOKEN"
           else
             curl -fsS -X POST "$CDN_INVALIDATION_URL"
@@ -107,15 +111,33 @@ jobs:
         run: ./scripts/post-deploy-check.sh "$SITE_URL"
 
       - name: Notify success
-        if: success() && env.NOTIFY_WEBHOOK_URL != ''
+        if: success()
         run: |
-          curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
-            -H 'Content-Type: application/json' \
-            -d "{\"text\":\"Landing deploy SUCCESS: ${GITHUB_REPOSITORY}@${GITHUB_SHA} release=${RELEASE_ID}\"}"
+          MESSAGE="Landing deploy SUCCESS: ${GITHUB_REPOSITORY}@${GITHUB_SHA} release=${RELEASE_ID}"
+          if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
+            curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${MESSAGE}\"}"
+          elif [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
+            curl -fsS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" \
+              --data-urlencode "text=${MESSAGE}"
+          else
+            echo "Notification skipped: neither webhook nor Telegram secrets are configured"
+          fi
 
       - name: Notify failure
-        if: failure() && env.NOTIFY_WEBHOOK_URL != ''
+        if: failure()
         run: |
-          curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
-            -H 'Content-Type: application/json' \
-            -d "{\"text\":\"Landing deploy FAILED: ${GITHUB_REPOSITORY}@${GITHUB_SHA}. Check run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}"
+          MESSAGE="Landing deploy FAILED: ${GITHUB_REPOSITORY}@${GITHUB_SHA}. Check run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
+            curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${MESSAGE}\"}"
+          elif [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
+            curl -fsS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" \
+              --data-urlencode "text=${MESSAGE}"
+          else
+            echo "Notification skipped: neither webhook nor Telegram secrets are configured"
+          fi

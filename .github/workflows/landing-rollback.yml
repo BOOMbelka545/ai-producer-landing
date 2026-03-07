@@ -25,6 +25,8 @@ jobs:
       DEPLOY_PATH: ${{ secrets.LANDING_DEPLOY_PATH }}
       DEFAULT_SITE_URL: ${{ secrets.LANDING_SITE_URL }}
       NOTIFY_WEBHOOK_URL: ${{ secrets.LANDING_NOTIFY_WEBHOOK_URL }}
+      TG_BOT_TOKEN: ${{ secrets.LANDING_TG_BOT_TOKEN }}
+      TG_CHAT_ID: ${{ secrets.LANDING_TG_CHAT_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -85,15 +87,33 @@ jobs:
           ./landing/scripts/post-deploy-check.sh "$SITE_URL"
 
       - name: Notify success
-        if: success() && env.NOTIFY_WEBHOOK_URL != ''
+        if: success()
         run: |
-          curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
-            -H 'Content-Type: application/json' \
-            -d "{\"text\":\"Landing rollback SUCCESS: target=${TARGET_RELEASE}, run=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}"
+          MESSAGE="Landing rollback SUCCESS: target=${TARGET_RELEASE}, run=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
+            curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${MESSAGE}\"}"
+          elif [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
+            curl -fsS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" \
+              --data-urlencode "text=${MESSAGE}"
+          else
+            echo "Notification skipped: neither webhook nor Telegram secrets are configured"
+          fi
 
       - name: Notify failure
-        if: failure() && env.NOTIFY_WEBHOOK_URL != ''
+        if: failure()
         run: |
-          curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
-            -H 'Content-Type: application/json' \
-            -d "{\"text\":\"Landing rollback FAILED: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}"
+          MESSAGE="Landing rollback FAILED: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
+            curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${MESSAGE}\"}"
+          elif [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
+            curl -fsS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" \
+              --data-urlencode "text=${MESSAGE}"
+          else
+            echo "Notification skipped: neither webhook nor Telegram secrets are configured"
+          fi

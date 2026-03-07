@@ -57,7 +57,13 @@ Store only in repository/environment secrets:
 - `LANDING_SITE_URL`
 - `LANDING_CDN_INVALIDATION_URL`
 - `LANDING_CDN_INVALIDATION_TOKEN` (optional if endpoint allows anonymous purge)
-- `LANDING_NOTIFY_WEBHOOK_URL` (Slack/Teams/custom webhook)
+- `LANDING_NOTIFY_WEBHOOK_URL` (optional; Slack/Teams/custom webhook)
+- `LANDING_TG_BOT_TOKEN` (optional; Telegram bot token)
+- `LANDING_TG_CHAT_ID` (optional; Telegram chat id)
+
+Notes:
+- CDN invalidation is optional. If `LANDING_CDN_INVALIDATION_URL` is empty, the workflow skips that step.
+- Notifications support either webhook or Telegram. Telegram is used when webhook is not set.
 
 ## Incident Response
 1. If deploy fails: review `landing-cd` logs, fix root cause, re-run after patch.

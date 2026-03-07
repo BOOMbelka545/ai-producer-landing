@@ -88,9 +88,9 @@ Implemented workflows:
 ### What CD does
 - Runs only for protected `main` / `release/*` branch pushes.
 - Builds and deploys static artifact to server over SSH.
-- Invalidates CDN/cache.
+- Invalidates CDN/cache (optional).
 - Runs post-deploy health-check (`/` 200 + primary CTA present).
-- Sends success/failure notification webhook.
+- Sends success/failure notification (webhook or Telegram bot).
 
 ### Rollback
 - Use GitHub Action `landing-rollback`.
