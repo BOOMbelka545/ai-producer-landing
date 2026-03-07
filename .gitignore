@@ -5,3 +5,6 @@ landing/.DS_Store
 landing/data/*.json
 landing/data/*.jsonl
 !landing/data/.gitkeep
+__pycache__/
+*.pyc
+landing.tar.gz
