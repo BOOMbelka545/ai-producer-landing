@@ -8,6 +8,7 @@
     "font-family-name-quotes": null,
     "color-hex-length": null,
     "property-no-vendor-prefix": null,
-    "media-feature-range-notation": null
+    "media-feature-range-notation": null,
+    "rule-empty-line-before": null
   }
 }
