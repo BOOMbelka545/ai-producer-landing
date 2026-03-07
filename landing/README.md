@@ -65,3 +65,37 @@
 - Локальный waitlist сохраняется в:
   - `/Users/leo/Desktop/Production/landing/data/waitlist.json`
 - Формат: JSON array (`[{ email, source, submitted_at }, ...]`), можно читать напрямую любым редактором.
+
+---
+
+## CI/CD (Phase 1)
+Implemented workflows:
+- `/.github/workflows/landing-ci.yml`
+- `/.github/workflows/landing-cd.yml`
+- `/.github/workflows/landing-rollback.yml`
+
+### What CI checks
+- HTML validation (`npm run lint:html`)
+- CSS lint (`npm run lint:css`)
+- JS lint (`npm run lint:js`)
+- Build static artifact (`npm run build`)
+- Dependency audit (`npm run audit`)
+- Secret scan (gitleaks)
+- Smoke (`npm run smoke`):
+  - `/` returns 200
+  - `data-cta-id="hero_main"` exists in HTML
+
+### What CD does
+- Runs only for protected `main` / `release/*` branch pushes.
+- Builds and deploys static artifact to server over SSH.
+- Invalidates CDN/cache.
+- Runs post-deploy health-check (`/` 200 + primary CTA present).
+- Sends success/failure notification webhook.
+
+### Rollback
+- Use GitHub Action `landing-rollback`.
+- Provide `release_id` or leave empty to rollback to previous successful release.
+
+### Secrets policy
+- Keep all deploy/CDN/webhook credentials only in GitHub Secrets.
+- Never commit secrets to git.
