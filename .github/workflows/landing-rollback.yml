@@ -49,8 +49,9 @@ jobs:
       - name: Prepare SSH key
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s' '${{ secrets.LANDING_DEPLOY_SSH_KEY }}' > ~/.ssh/landing_deploy_key
+          printf '%s' '${{ secrets.LANDING_DEPLOY_SSH_KEY }}' | tr -d '\r' > ~/.ssh/landing_deploy_key
           chmod 600 ~/.ssh/landing_deploy_key
+          ssh-keygen -y -f ~/.ssh/landing_deploy_key >/dev/null
 
       - name: Prepare SSH known_hosts
         run: |
