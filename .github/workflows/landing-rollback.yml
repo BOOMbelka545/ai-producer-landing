@@ -112,7 +112,7 @@ jobs:
       - name: Notify success
         if: success()
         run: |
-          MESSAGE="Landing rollback SUCCESS: target=${TARGET_RELEASE}, run=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          MESSAGE="[CI/CD] Landing rollback SUCCESS: target=${TARGET_RELEASE}, run=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
             curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
               -H 'Content-Type: application/json' \
@@ -128,7 +128,7 @@ jobs:
       - name: Notify failure
         if: failure()
         run: |
-          MESSAGE="Landing rollback FAILED: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          MESSAGE="[CI/CD] Landing rollback FAILED: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
             curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
               -H 'Content-Type: application/json' \
