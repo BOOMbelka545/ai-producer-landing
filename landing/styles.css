@@ -836,6 +836,14 @@ body {
   font-size: 11px;
 }
 
+.deploy-build {
+  margin: 8px auto 12px;
+  color: rgba(160, 164, 196, 0.5);
+  font-size: 10px;
+  text-align: center;
+  letter-spacing: 0.08em;
+}
+
 .results-disclaimer {
   margin: 42px auto 0;
   padding: 0 0 2px;
@@ -1091,6 +1099,11 @@ a:focus-visible {
     position: static;
     left: auto;
     transform: none;
+  }
+
+  .deploy-build {
+    margin: 4px auto 10px;
+    font-size: 9px;
   }
 
   .beta-modal__dialog {
