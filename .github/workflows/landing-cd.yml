@@ -99,24 +99,37 @@ jobs:
         run: |
           RELEASE_ID="${GITHUB_SHA}-${GITHUB_RUN_ID}"
           echo "RELEASE_ID=$RELEASE_ID" >> "$GITHUB_ENV"
+          CLEAN_DEPLOY_PATH="$(printf '%s' "${DEPLOY_PATH:-}" | tr -d '\r' | xargs)"
+          if [ -z "$CLEAN_DEPLOY_PATH" ]; then
+            echo "DEPLOY_PATH is empty after normalization"
+            exit 1
+          fi
           TAR_PATH="dist/landing-site-${GITHUB_SHA}.tar.gz"
 
-          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${DEPLOY_PATH}'"
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '$CLEAN_DEPLOY_PATH'"
 
-          scp -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -P "${DEPLOY_PORT:-22}" "$TAR_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/landing-${RELEASE_ID}.tar.gz"
+          scp -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -P "${DEPLOY_PORT:-22}" "$TAR_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}:${CLEAN_DEPLOY_PATH}/landing-${RELEASE_ID}.tar.gz"
 
       - name: Activate release on host
         run: |
-          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "
-            set -euo pipefail
-            mkdir -p '${DEPLOY_PATH}/releases' '${DEPLOY_PATH}/shared'
-            RELEASE_DIR='${DEPLOY_PATH}/releases/${RELEASE_ID}'
-            mkdir -p \"$RELEASE_DIR\"
-            tar -xzf '${DEPLOY_PATH}/landing-${RELEASE_ID}.tar.gz' -C \"$RELEASE_DIR\"
-            ln -sfn \"$RELEASE_DIR\" '${DEPLOY_PATH}/current'
-            rm -f '${DEPLOY_PATH}/landing-${RELEASE_ID}.tar.gz'
-            ls -1dt '${DEPLOY_PATH}'/releases/* | tail -n +8 | xargs -r rm -rf
-          "
+          CLEAN_DEPLOY_PATH="$(printf '%s' "${DEPLOY_PATH:-}" | tr -d '\r' | xargs)"
+          if [ -z "$CLEAN_DEPLOY_PATH" ]; then
+            echo "DEPLOY_PATH is empty after normalization"
+            exit 1
+          fi
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "bash -s -- '$CLEAN_DEPLOY_PATH' '${RELEASE_ID}'" <<'EOF'
+          set -euo pipefail
+          DEPLOY_PATH="$1"
+          RELEASE_ID="$2"
+          mkdir -p "$DEPLOY_PATH/releases" "$DEPLOY_PATH/shared"
+          RELEASE_DIR="$DEPLOY_PATH/releases/$RELEASE_ID"
+          mkdir -p "$RELEASE_DIR"
+          tar -xzf "$DEPLOY_PATH/landing-$RELEASE_ID.tar.gz" -C "$RELEASE_DIR"
+          ln -sfn "$RELEASE_DIR" "$DEPLOY_PATH/current"
+          rm -f "$DEPLOY_PATH/landing-$RELEASE_ID.tar.gz"
+          ls -1dt "$DEPLOY_PATH"/releases/* 2>/dev/null | tail -n +8 | xargs -r rm -rf
+          EOF
 
       - name: Invalidate CDN/cache
         run: |
