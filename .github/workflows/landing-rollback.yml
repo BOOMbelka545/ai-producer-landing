@@ -1,0 +1,120 @@
+name: landing-rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: 'Release ID from /releases/<release_id> (leave empty to rollback to previous)'
+        required: false
+        type: string
+      site_url:
+        description: 'Override site URL for health-check (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.LANDING_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.LANDING_DEPLOY_USER }}
+      DEPLOY_PORT: ${{ secrets.LANDING_DEPLOY_PORT }}
+      DEPLOY_PATH: ${{ secrets.LANDING_DEPLOY_PATH }}
+      DEFAULT_SITE_URL: ${{ secrets.LANDING_SITE_URL }}
+      NOTIFY_WEBHOOK_URL: ${{ secrets.LANDING_NOTIFY_WEBHOOK_URL }}
+      TG_BOT_TOKEN: ${{ secrets.LANDING_TG_BOT_TOKEN }}
+      TG_CHAT_ID: ${{ secrets.LANDING_TG_CHAT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        run: |
+          required=(DEPLOY_HOST DEPLOY_USER DEPLOY_PATH DEFAULT_SITE_URL)
+          for key in "${required[@]}"; do
+            if [ -z "${!key:-}" ]; then
+              echo "Missing required secret: $key"
+              exit 1
+            fi
+          done
+
+          if [ -z "${{ secrets.LANDING_DEPLOY_SSH_KEY }}" ]; then
+            echo "Missing required secret: LANDING_DEPLOY_SSH_KEY"
+            exit 1
+          fi
+
+      - name: Start SSH agent
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s' '${{ secrets.LANDING_DEPLOY_SSH_KEY }}' > ~/.ssh/landing_deploy_key
+          chmod 600 ~/.ssh/landing_deploy_key
+
+      - name: Prepare SSH known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${DEPLOY_PORT:-22}" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Rollback current symlink
+        run: |
+          TARGET_RELEASE='${{ github.event.inputs.release_id }}'
+
+          if [ -z "$TARGET_RELEASE" ]; then
+            TARGET_RELEASE="$(ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "ls -1dt '${DEPLOY_PATH}'/releases/* | sed -n '2p' | xargs -n1 basename")"
+          fi
+
+          if [ -z "$TARGET_RELEASE" ]; then
+            echo "Could not determine target release"
+            exit 1
+          fi
+
+          echo "TARGET_RELEASE=$TARGET_RELEASE" >> "$GITHUB_ENV"
+
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "
+            set -euo pipefail
+            TARGET='${DEPLOY_PATH}/releases/${TARGET_RELEASE}'
+            test -d \"$TARGET\"
+            ln -sfn \"$TARGET\" '${DEPLOY_PATH}/current'
+          "
+
+      - name: Post-rollback health-check
+        run: |
+          SITE_URL='${{ github.event.inputs.site_url }}'
+          if [ -z "$SITE_URL" ]; then
+            SITE_URL="$DEFAULT_SITE_URL"
+          fi
+          ./landing/scripts/post-deploy-check.sh "$SITE_URL"
+
+      - name: Notify success
+        if: success()
+        run: |
+          MESSAGE="Landing rollback SUCCESS: target=${TARGET_RELEASE}, run=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
+            curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${MESSAGE}\"}"
+          elif [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
+            curl -fsS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" \
+              --data-urlencode "text=${MESSAGE}"
+          else
+            echo "Notification skipped: neither webhook nor Telegram secrets are configured"
+          fi
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          MESSAGE="Landing rollback FAILED: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
+            curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${MESSAGE}\"}"
+          elif [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
+            curl -fsS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" \
+              --data-urlencode "text=${MESSAGE}"
+          else
+            echo "Notification skipped: neither webhook nor Telegram secrets are configured"
+          fi

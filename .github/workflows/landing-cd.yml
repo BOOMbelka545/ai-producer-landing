@@ -1,0 +1,144 @@
+name: landing-cd
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+    paths:
+      - 'landing/**'
+      - '.github/workflows/landing-cd.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: landing-cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref_protected == true
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: landing
+    env:
+      DEPLOY_HOST: ${{ secrets.LANDING_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.LANDING_DEPLOY_USER }}
+      DEPLOY_PORT: ${{ secrets.LANDING_DEPLOY_PORT }}
+      DEPLOY_PATH: ${{ secrets.LANDING_DEPLOY_PATH }}
+      SITE_URL: ${{ secrets.LANDING_SITE_URL }}
+      CDN_INVALIDATION_URL: ${{ secrets.LANDING_CDN_INVALIDATION_URL }}
+      CDN_INVALIDATION_TOKEN: ${{ secrets.LANDING_CDN_INVALIDATION_TOKEN }}
+      NOTIFY_WEBHOOK_URL: ${{ secrets.LANDING_NOTIFY_WEBHOOK_URL }}
+      TG_BOT_TOKEN: ${{ secrets.LANDING_TG_BOT_TOKEN }}
+      TG_CHAT_ID: ${{ secrets.LANDING_TG_CHAT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        run: |
+          required=(DEPLOY_HOST DEPLOY_USER DEPLOY_PATH SITE_URL)
+          for key in "${required[@]}"; do
+            if [ -z "${!key:-}" ]; then
+              echo "Missing required secret: $key"
+              exit 1
+            fi
+          done
+
+          if [ -z "${{ secrets.LANDING_DEPLOY_SSH_KEY }}" ]; then
+            echo "Missing required secret: LANDING_DEPLOY_SSH_KEY"
+            exit 1
+          fi
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build artifact
+        run: npm run build
+
+      - name: Start SSH agent
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s' '${{ secrets.LANDING_DEPLOY_SSH_KEY }}' > ~/.ssh/landing_deploy_key
+          chmod 600 ~/.ssh/landing_deploy_key
+
+      - name: Prepare SSH known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${DEPLOY_PORT:-22}" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload artifact to host
+        run: |
+          RELEASE_ID="${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          echo "RELEASE_ID=$RELEASE_ID" >> "$GITHUB_ENV"
+          TAR_PATH="dist/landing-site-${GITHUB_SHA}.tar.gz"
+
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${DEPLOY_PATH}'"
+
+          scp -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -P "${DEPLOY_PORT:-22}" "$TAR_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/landing-${RELEASE_ID}.tar.gz"
+
+      - name: Activate release on host
+        run: |
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "
+            set -euo pipefail
+            mkdir -p '${DEPLOY_PATH}/releases' '${DEPLOY_PATH}/shared'
+            RELEASE_DIR='${DEPLOY_PATH}/releases/${RELEASE_ID}'
+            mkdir -p \"$RELEASE_DIR\"
+            tar -xzf '${DEPLOY_PATH}/landing-${RELEASE_ID}.tar.gz' -C \"$RELEASE_DIR\"
+            ln -sfn \"$RELEASE_DIR\" '${DEPLOY_PATH}/current'
+            rm -f '${DEPLOY_PATH}/landing-${RELEASE_ID}.tar.gz'
+            ls -1dt '${DEPLOY_PATH}'/releases/* | tail -n +8 | xargs -r rm -rf
+          "
+
+      - name: Invalidate CDN/cache
+        run: |
+          if [ -z "${CDN_INVALIDATION_URL:-}" ]; then
+            echo "CDN invalidation skipped: LANDING_CDN_INVALIDATION_URL is not set"
+          elif [ -n "${CDN_INVALIDATION_TOKEN:-}" ]; then
+            curl -fsS -X POST "$CDN_INVALIDATION_URL" -H "Authorization: Bearer $CDN_INVALIDATION_TOKEN"
+          else
+            curl -fsS -X POST "$CDN_INVALIDATION_URL"
+          fi
+
+      - name: Post-deploy health-check
+        run: ./scripts/post-deploy-check.sh "$SITE_URL"
+
+      - name: Notify success
+        if: success()
+        run: |
+          MESSAGE="Landing deploy SUCCESS: ${GITHUB_REPOSITORY}@${GITHUB_SHA} release=${RELEASE_ID}"
+          if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
+            curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${MESSAGE}\"}"
+          elif [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
+            curl -fsS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" \
+              --data-urlencode "text=${MESSAGE}"
+          else
+            echo "Notification skipped: neither webhook nor Telegram secrets are configured"
+          fi
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          MESSAGE="Landing deploy FAILED: ${GITHUB_REPOSITORY}@${GITHUB_SHA}. Check run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
+            curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${MESSAGE}\"}"
+          elif [ -n "${TG_BOT_TOKEN:-}" ] && [ -n "${TG_CHAT_ID:-}" ]; then
+            curl -fsS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" \
+              --data-urlencode "text=${MESSAGE}"
+          else
+            echo "Notification skipped: neither webhook nor Telegram secrets are configured"
+          fi

@@ -20,7 +20,7 @@ const TOKENS = {
 };
 
 const SESSION_KEY = "landing_session_id_v1";
-const UTM_KEY = "landing_utm_v1";
+const UTM_STORAGE_ID = "landing_utm_v1";
 const SECTION_OBSERVED = ["hero", "problem", "how-it-works", "reviews", "final-cta"];
 const SCROLL_DEPTH_STEPS = [25, 50, 75, 100];
 
@@ -108,12 +108,12 @@ function getUtmData() {
   const hasUtm = Object.values(parsed).some(Boolean);
 
   if (hasUtm) {
-    localStorage.setItem(UTM_KEY, JSON.stringify(parsed));
+    localStorage.setItem(UTM_STORAGE_ID, JSON.stringify(parsed));
     return parsed;
   }
 
   try {
-    const stored = JSON.parse(localStorage.getItem(UTM_KEY) || "{}");
+    const stored = JSON.parse(localStorage.getItem(UTM_STORAGE_ID) || "{}");
     return {
       utm_source: stored.utm_source || "",
       utm_medium: stored.utm_medium || "",

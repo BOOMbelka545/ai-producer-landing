@@ -1,0 +1,70 @@
+name: landing-ci
+
+on:
+  pull_request:
+    paths:
+      - 'landing/**'
+      - '.github/workflows/landing-ci.yml'
+  push:
+    paths:
+      - 'landing/**'
+      - '.github/workflows/landing-ci.yml'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  quality-security-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: landing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: landing/package.json
+
+      - name: Install lint dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: HTML validation
+        run: npm run lint:html
+
+      - name: CSS lint
+        run: npm run lint:css
+
+      - name: JS lint
+        run: npm run lint:js
+
+      - name: Build static artifact
+        run: npm run build
+
+      - name: Dependency audit
+        run: npm run audit
+
+      - name: Secret scan (gitleaks)
+        run: |
+          set -euo pipefail
+          GITLEAKS_VERSION="8.24.3"
+          curl -fsSL -o /tmp/gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp
+          /tmp/gitleaks detect --source . --no-git --redact --exit-code 1
+
+      - name: Smoke check
+        run: npm run smoke
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: landing-static-${{ github.sha }}
+          path: |
+            landing/dist/site
+            landing/dist/landing-site-${{ github.sha }}.tar.gz
+          if-no-files-found: error
