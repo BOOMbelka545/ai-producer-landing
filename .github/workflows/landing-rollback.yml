@@ -46,10 +46,11 @@ jobs:
             exit 1
           fi
 
-      - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.LANDING_DEPLOY_SSH_KEY }}
+      - name: Prepare SSH key
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s' '${{ secrets.LANDING_DEPLOY_SSH_KEY }}' > ~/.ssh/landing_deploy_key
+          chmod 600 ~/.ssh/landing_deploy_key
 
       - name: Prepare SSH known_hosts
         run: |
@@ -61,7 +62,7 @@ jobs:
           TARGET_RELEASE='${{ github.event.inputs.release_id }}'
 
           if [ -z "$TARGET_RELEASE" ]; then
-            TARGET_RELEASE="$(ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "ls -1dt '${DEPLOY_PATH}'/releases/* | sed -n '2p' | xargs -n1 basename")"
+            TARGET_RELEASE="$(ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "ls -1dt '${DEPLOY_PATH}'/releases/* | sed -n '2p' | xargs -n1 basename")"
           fi
 
           if [ -z "$TARGET_RELEASE" ]; then
@@ -71,7 +72,7 @@ jobs:
 
           echo "TARGET_RELEASE=$TARGET_RELEASE" >> "$GITHUB_ENV"
 
-          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "
             set -euo pipefail
             TARGET='${DEPLOY_PATH}/releases/${TARGET_RELEASE}'
             test -d \"$TARGET\"
