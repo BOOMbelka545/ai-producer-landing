@@ -27,9 +27,9 @@ ANALYTICS_ACCESS_LOG_FILE = DATA_DIR / "analytics-access.jsonl"
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 MIXPANEL_TRACK_URL = "https://api-js.mixpanel.com/track?verbose=1&ip=1"
-MIXPANEL_TOKEN_DEV = os.environ.get("MIXPANEL_TOKEN_DEV", "a553f35409783099e770b1756f90da5f").strip()
-MIXPANEL_TOKEN_STAGE = os.environ.get("MIXPANEL_TOKEN_STAGE", "49c7b108b9f97a1157bca051c7534070").strip()
-MIXPANEL_TOKEN_PROD = os.environ.get("MIXPANEL_TOKEN_PROD", "df6210d59eda0afe2b086bfb8719dc25").strip()
+MIXPANEL_TOKEN_DEV = os.environ.get("MIXPANEL_TOKEN_DEV", "").strip()
+MIXPANEL_TOKEN_STAGE = os.environ.get("MIXPANEL_TOKEN_STAGE", "").strip()
+MIXPANEL_TOKEN_PROD = os.environ.get("MIXPANEL_TOKEN_PROD", "").strip()
 SSL_CTX = ssl.create_default_context()
 
 ANALYTICS_BASIC_USER = os.environ.get("ANALYTICS_BASIC_USER", "owner").strip()
