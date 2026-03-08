@@ -80,24 +80,43 @@ jobs:
       - name: Rollback current symlink
         run: |
           TARGET_RELEASE='${{ github.event.inputs.release_id }}'
-
-          if [ -z "$TARGET_RELEASE" ]; then
-            TARGET_RELEASE="$(ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "ls -1dt '${DEPLOY_PATH}'/releases/* | sed -n '2p' | xargs -n1 basename")"
+          CLEAN_DEPLOY_PATH="$(printf '%s' "${DEPLOY_PATH:-}" | tr -d '\r' | xargs)"
+          if [ -z "$CLEAN_DEPLOY_PATH" ]; then
+            echo "DEPLOY_PATH is empty after normalization"
+            exit 1
           fi
 
           if [ -z "$TARGET_RELEASE" ]; then
-            echo "Could not determine target release"
+            TARGET_RELEASE="$(ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+              "bash -s -- '$CLEAN_DEPLOY_PATH'" <<'EOF'
+            set -euo pipefail
+            DEPLOY_PATH="$1"
+            mapfile -t releases < <(find "$DEPLOY_PATH/releases" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r)
+            if [ "${#releases[@]}" -lt 2 ]; then
+              echo ""
+              exit 0
+            fi
+            printf '%s' "${releases[1]}"
+            EOF
+            )"
+          fi
+
+          if [ -z "$TARGET_RELEASE" ]; then
+            echo "Could not determine target release. There is no previous release yet. Deploy one more release first or pass release_id manually."
             exit 1
           fi
 
           echo "TARGET_RELEASE=$TARGET_RELEASE" >> "$GITHUB_ENV"
 
-          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "
-            set -euo pipefail
-            TARGET='${DEPLOY_PATH}/releases/${TARGET_RELEASE}'
-            test -d \"$TARGET\"
-            ln -sfn \"$TARGET\" '${DEPLOY_PATH}/current'
-          "
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "bash -s -- '$CLEAN_DEPLOY_PATH' '$TARGET_RELEASE'" <<'EOF'
+          set -euo pipefail
+          DEPLOY_PATH="$1"
+          TARGET_RELEASE="$2"
+          TARGET="$DEPLOY_PATH/releases/$TARGET_RELEASE"
+          test -d "$TARGET"
+          ln -sfn "$TARGET" "$DEPLOY_PATH/current"
+          EOF
 
       - name: Post-rollback health-check
         run: |
