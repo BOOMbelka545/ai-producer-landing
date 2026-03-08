@@ -5,10 +5,14 @@ on:
     paths:
       - 'landing/**'
       - '.github/workflows/landing-ci.yml'
+      - '.github/workflows/landing-cd.yml'
+      - '.github/workflows/landing-rollback.yml'
   push:
     paths:
       - 'landing/**'
       - '.github/workflows/landing-ci.yml'
+      - '.github/workflows/landing-cd.yml'
+      - '.github/workflows/landing-rollback.yml'
 
 permissions:
   contents: read
