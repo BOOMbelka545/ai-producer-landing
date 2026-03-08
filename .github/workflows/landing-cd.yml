@@ -67,9 +67,7 @@ jobs:
       - name: Start SSH agent
         run: |
           install -m 700 -d ~/.ssh
-          cat > ~/.ssh/landing_deploy_key <<'EOF'
-          ${{ secrets.LANDING_DEPLOY_SSH_KEY }}
-          EOF
+          printf '%s' '${{ secrets.LANDING_DEPLOY_SSH_KEY }}' > ~/.ssh/landing_deploy_key
           chmod 600 ~/.ssh/landing_deploy_key
 
       - name: Prepare SSH known_hosts
