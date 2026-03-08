@@ -32,6 +32,26 @@ MIXPANEL_TOKEN_STAGE = os.environ.get("MIXPANEL_TOKEN_STAGE", "").strip()
 MIXPANEL_TOKEN_PROD = os.environ.get("MIXPANEL_TOKEN_PROD", "").strip()
 SSL_CTX = ssl.create_default_context()
 
+LANDING_ALERT_TG_BOT_TOKEN = (
+    os.environ.get("LANDING_ALERT_TG_BOT_TOKEN", "").strip()
+    or os.environ.get("LANDING_TG_BOT_TOKEN", "").strip()
+    or os.environ.get("TG_BOT_TOKEN", "").strip()
+)
+LANDING_ALERT_TG_CHAT_ID = (
+    os.environ.get("LANDING_ALERT_TG_CHAT_ID", "").strip()
+    or os.environ.get("LANDING_TG_CHAT_ID", "").strip()
+    or os.environ.get("TG_CHAT_ID", "").strip()
+)
+LANDING_ALERTS_ENABLED = os.environ.get("LANDING_ALERTS_ENABLED", "true").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+LANDING_ALERT_VISIT_EVENT = "landing_view"
+LANDING_ALERT_ERROR_SUFFIX = "_error"
+TELEGRAM_SEND_MESSAGE_URL_TMPL = "https://api.telegram.org/bot{token}/sendMessage"
+
 ANALYTICS_BASIC_USER = os.environ.get("ANALYTICS_BASIC_USER", "owner").strip()
 _ANALYTICS_BASIC_PASSWORD = os.environ.get("ANALYTICS_BASIC_PASSWORD", "").strip()
 _ANALYTICS_BASIC_PASSWORD_HASH = os.environ.get("ANALYTICS_BASIC_PASSWORD_HASH", "").strip().lower()
@@ -243,6 +263,102 @@ def _forward_to_mixpanel_async(event_name: str, props: dict) -> None:
 
     thread = threading.Thread(target=_worker, daemon=True)
     thread.start()
+
+
+def _send_telegram_message(text: str) -> tuple[bool, str]:
+    if not LANDING_ALERTS_ENABLED:
+        return False, "alerts_disabled"
+    if not LANDING_ALERT_TG_BOT_TOKEN or not LANDING_ALERT_TG_CHAT_ID:
+        return False, "telegram_not_configured"
+
+    body = urllib.parse.urlencode(
+        {
+            "chat_id": LANDING_ALERT_TG_CHAT_ID,
+            "text": text,
+            "disable_web_page_preview": "true",
+        }
+    ).encode("utf-8")
+    req = urllib.request.Request(
+        TELEGRAM_SEND_MESSAGE_URL_TMPL.format(token=LANDING_ALERT_TG_BOT_TOKEN),
+        data=body,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=2.5, context=SSL_CTX) as response:
+            status = int(response.getcode() or 0)
+            if 200 <= status < 300:
+                return True, ""
+            return False, f"http_status:{status}"
+    except Exception as exc:
+        return False, f"telegram_send_failed:{exc}"
+
+
+def _send_telegram_message_async(text: str) -> None:
+    def _worker() -> None:
+        ok, err = _send_telegram_message(text)
+        if not ok:
+            print(f"[landing-alert] failed err={err}")
+
+    thread = threading.Thread(target=_worker, daemon=True)
+    thread.start()
+
+
+def _format_landing_alert_title(kind: str) -> str:
+    if kind == "visit":
+        return "[Landing] Новое посещение"
+    if kind == "lead":
+        return "[Landing] Оставил почту"
+    return "[Landing] Критическая ошибка"
+
+
+def _format_landing_alert(kind: str, details: dict[str, str]) -> str:
+    title = _format_landing_alert_title(kind)
+    lines = [title]
+    for key, value in details.items():
+        safe = str(value).strip()
+        if not safe:
+            continue
+        lines.append(f"{key}: {safe}")
+    return "\n".join(lines)
+
+
+def _notify_landing_event(event_name: str, props: dict, remote_addr: str) -> None:
+    kind = ""
+    details: dict[str, str] = {
+        "event": event_name,
+        "ip": remote_addr,
+    }
+    country = str(props.get("country", "")).strip()
+    if country:
+        details["country"] = country
+
+    if event_name == LANDING_ALERT_VISIT_EVENT:
+        kind = "visit"
+        details["page"] = str(props.get("page_url", "")).strip()
+        details["utm_source"] = str(props.get("utm_source", "")).strip()
+    elif event_name.endswith(LANDING_ALERT_ERROR_SUFFIX):
+        kind = "error"
+        details["error_type"] = str(props.get("error_type", "")).strip()
+        details["error_message"] = str(props.get("error_message", "")).strip()
+    else:
+        return
+
+    _send_telegram_message_async(_format_landing_alert(kind, details))
+
+
+def _notify_waitlist_saved(email: str, source: str, submitted_at: str, remote_addr: str) -> None:
+    alert = _format_landing_alert(
+        "lead",
+        {
+            "email": email,
+            "source": source,
+            "submitted_at": submitted_at,
+            "ip": remote_addr,
+        },
+    )
+    _send_telegram_message_async(alert)
 
 
 def _issue_owner_session(identity: str) -> str:
@@ -583,6 +699,12 @@ class LandingHandler(SimpleHTTPRequestHandler):
         }
         records.append(record)
         _write_waitlist(records)
+        _notify_waitlist_saved(
+            email=email,
+            source=source,
+            submitted_at=submitted_at,
+            remote_addr=_client_ip(self),
+        )
 
         self._send_json(200, {"ok": True, "saved": True})
 
@@ -614,6 +736,7 @@ class LandingHandler(SimpleHTTPRequestHandler):
             "mixpanel_error": "",
         }
         _append_analytics_debug(entry)
+        _notify_landing_event(event_name=event_name, props=props, remote_addr=entry["remote_addr"])
         self._send_json(
             200,
             {

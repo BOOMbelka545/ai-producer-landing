@@ -66,6 +66,17 @@
   - `/Users/leo/Desktop/Production/landing/data/waitlist.json`
 - Формат: JSON array (`[{ email, source, submitted_at }, ...]`), можно читать напрямую любым редактором.
 
+## Alerts в Telegram (Landing)
+Сервер умеет отправлять сообщения в Telegram-бота для ключевых сигналов:
+- `[Landing] Новое посещение` (событие `landing_view`)
+- `[Landing] Критическая ошибка` (события, которые оканчиваются на `_error`)
+- `[Landing] Оставил почту` (успешное сохранение в `/api/waitlist`, включает email)
+
+Переменные окружения:
+- `LANDING_ALERTS_ENABLED=true|false` (по умолчанию `true`)
+- `LANDING_ALERT_TG_BOT_TOKEN` (fallback: `LANDING_TG_BOT_TOKEN`, `TG_BOT_TOKEN`)
+- `LANDING_ALERT_TG_CHAT_ID` (fallback: `LANDING_TG_CHAT_ID`, `TG_CHAT_ID`)
+
 ---
 
 ## CI/CD (Phase 1)

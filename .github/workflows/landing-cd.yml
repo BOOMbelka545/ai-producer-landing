@@ -147,7 +147,7 @@ jobs:
       - name: Notify success
         if: success()
         run: |
-          MESSAGE="Landing deploy SUCCESS: ${GITHUB_REPOSITORY}@${GITHUB_SHA} release=${RELEASE_ID}"
+          MESSAGE="[CI/CD] Landing deploy SUCCESS: ${GITHUB_REPOSITORY}@${GITHUB_SHA} release=${RELEASE_ID}"
           if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
             curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
               -H 'Content-Type: application/json' \
@@ -163,7 +163,7 @@ jobs:
       - name: Notify failure
         if: failure()
         run: |
-          MESSAGE="Landing deploy FAILED: ${GITHUB_REPOSITORY}@${GITHUB_SHA}. Check run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          MESSAGE="[CI/CD] Landing deploy FAILED: ${GITHUB_REPOSITORY}@${GITHUB_SHA}. Check run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
             curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
               -H 'Content-Type: application/json' \
