@@ -99,3 +99,4 @@ Implemented workflows:
 ### Secrets policy
 - Keep all deploy/CDN/webhook credentials only in GitHub Secrets.
 - Never commit secrets to git.
+
