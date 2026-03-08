@@ -65,9 +65,28 @@ jobs:
         run: npm run build
 
       - name: Prepare SSH key
+        env:
+          LANDING_DEPLOY_SSH_KEY: ${{ secrets.LANDING_DEPLOY_SSH_KEY }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s' '${{ secrets.LANDING_DEPLOY_SSH_KEY }}' | tr -d '\r' > ~/.ssh/landing_deploy_key
+          python3 - <<'PY'
+          import base64
+          import os
+          from pathlib import Path
+
+          raw = os.environ.get("LANDING_DEPLOY_SSH_KEY", "")
+          if not raw:
+              raise SystemExit("LANDING_DEPLOY_SSH_KEY is empty")
+
+          if "BEGIN OPENSSH PRIVATE KEY" not in raw and "BEGIN RSA PRIVATE KEY" not in raw:
+              try:
+                  raw = base64.b64decode(raw).decode("utf-8")
+              except Exception:
+                  pass
+
+          normalized = raw.replace("\r", "").replace("\\n", "\n").strip() + "\n"
+          Path("/home/runner/.ssh/landing_deploy_key").write_text(normalized, encoding="utf-8")
+          PY
           chmod 600 ~/.ssh/landing_deploy_key
           ssh-keygen -y -f ~/.ssh/landing_deploy_key >/dev/null
 
