@@ -15,7 +15,6 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref_protected == true
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,6 +24,8 @@ jobs:
       DEPLOY_USER: ${{ secrets.LANDING_DEPLOY_USER }}
       DEPLOY_PORT: ${{ secrets.LANDING_DEPLOY_PORT }}
       DEPLOY_PATH: ${{ secrets.LANDING_DEPLOY_PATH }}
+      BACKEND_PATH: ${{ secrets.LANDING_BACKEND_PATH }}
+      BACKEND_SERVICE: ${{ secrets.LANDING_BACKEND_SERVICE }}
       SITE_URL: ${{ secrets.LANDING_SITE_URL }}
       CDN_INVALIDATION_URL: ${{ secrets.LANDING_CDN_INVALIDATION_URL }}
       CDN_INVALIDATION_TOKEN: ${{ secrets.LANDING_CDN_INVALIDATION_TOKEN }}
@@ -127,6 +128,19 @@ jobs:
           rm -f "$DEPLOY_PATH/landing-$RELEASE_ID.tar.gz"
           ls -1dt "$DEPLOY_PATH"/releases/* 2>/dev/null | tail -n +8 | xargs -r rm -rf
           EOF
+
+      - name: Sync backend API server.py and restart service
+        run: |
+          CLEAN_BACKEND_PATH="$(printf '%s' "${BACKEND_PATH:-}" | tr -d '\r' | xargs)"
+          SERVICE_NAME="$(printf '%s' "${BACKEND_SERVICE:-landing}" | tr -d '\r' | xargs)"
+          if [ -z "$CLEAN_BACKEND_PATH" ]; then
+            echo "Backend sync skipped: LANDING_BACKEND_PATH is not set"
+            exit 0
+          fi
+
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '$CLEAN_BACKEND_PATH'"
+          scp -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -P "${DEPLOY_PORT:-22}" "server.py" "${DEPLOY_USER}@${DEPLOY_HOST}:${CLEAN_BACKEND_PATH}/server.py"
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "systemctl restart '$SERVICE_NAME' && systemctl is-active '$SERVICE_NAME'"
 
       - name: Invalidate CDN/cache
         run: |

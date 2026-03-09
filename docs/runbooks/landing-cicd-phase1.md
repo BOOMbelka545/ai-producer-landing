@@ -27,17 +27,20 @@ On every PR/push affecting `landing/**`:
 - HTML contains primary CTA marker: `data-cta-id="hero_main"`
 
 ## CD Flow
-Trigger: push to protected `main` or `release/*` with changes under `landing/**`.
+Trigger: push to `main` or `release/*` with changes under `landing/**`.
 1. Build static artifact.
 2. Upload artifact to host over SSH.
 3. Create release directory `${LANDING_DEPLOY_PATH}/releases/<release-id>`.
 4. Switch `${LANDING_DEPLOY_PATH}/current` symlink to new release.
-5. Invalidate CDN via `LANDING_CDN_INVALIDATION_URL`.
-6. Run post-deploy check against `LANDING_SITE_URL`:
+5. Optional backend sync:
+- upload `landing/server.py` into `${LANDING_BACKEND_PATH}`
+- restart service `${LANDING_BACKEND_SERVICE}` (default: `landing`)
+6. Invalidate CDN via `LANDING_CDN_INVALIDATION_URL`.
+7. Run post-deploy check against `LANDING_SITE_URL`:
 - `/` returns 200
 - response body is non-empty
 - contains `data-cta-id="hero_main"`
-7. Send deploy status to `LANDING_NOTIFY_WEBHOOK_URL`.
+8. Send deploy status to `LANDING_NOTIFY_WEBHOOK_URL`.
 
 ## Rollback
 Manual trigger: `landing-rollback` workflow.
@@ -55,6 +58,8 @@ Store only in repository/environment secrets:
 - `LANDING_DEPLOY_PATH`
 - `LANDING_DEPLOY_SSH_KEY`
 - `LANDING_SITE_URL`
+- `LANDING_BACKEND_PATH` (optional; e.g. `/var/www/landing`)
+- `LANDING_BACKEND_SERVICE` (optional; default `landing`)
 - `LANDING_CDN_INVALIDATION_URL`
 - `LANDING_CDN_INVALIDATION_TOKEN` (optional if endpoint allows anonymous purge)
 - `LANDING_NOTIFY_WEBHOOK_URL` (optional; Slack/Teams/custom webhook)
