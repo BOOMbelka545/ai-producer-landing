@@ -12,6 +12,17 @@ cp "$ROOT_DIR/index.html" "$SITE_DIR/index.html"
 cp "$ROOT_DIR/styles.css" "$SITE_DIR/styles.css"
 cp "$ROOT_DIR/script.js" "$SITE_DIR/script.js"
 cp -R "$ROOT_DIR/assets" "$SITE_DIR/assets"
+for extra_page in privacy.html terms.html features.html; do
+  if [ -f "$ROOT_DIR/$extra_page" ]; then
+    cp "$ROOT_DIR/$extra_page" "$SITE_DIR/$extra_page"
+  fi
+done
+if [ -f "$ROOT_DIR/robots.txt" ]; then
+  cp "$ROOT_DIR/robots.txt" "$SITE_DIR/robots.txt"
+fi
+if [ -f "$ROOT_DIR/sitemap.xml" ]; then
+  cp "$ROOT_DIR/sitemap.xml" "$SITE_DIR/sitemap.xml"
+fi
 
 if [ -d "$ROOT_DIR/data" ]; then
   mkdir -p "$SITE_DIR/data"
