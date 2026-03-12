@@ -190,6 +190,7 @@ jobs:
 
       - name: Auto rollback if deploy validation failed
         if: failure()
+        continue-on-error: true
         run: |
           CLEAN_DEPLOY_PATH="$(printf '%s' "${DEPLOY_PATH:-}" | tr -d '\r' | xargs)"
           CLEAN_BACKEND_PATH="$(printf '%s' "${BACKEND_PATH:-/var/www/landing/landing}" | tr -d '\r' | xargs)"
@@ -199,15 +200,21 @@ jobs:
             exit 0
           fi
           PREV_RELEASE="$(ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "ls -1dt \"$CLEAN_DEPLOY_PATH\"/releases/* 2>/dev/null | sed -n '2p' | xargs -r -n1 basename")"
+            "ls -1dt \"$CLEAN_DEPLOY_PATH\"/releases/* 2>/dev/null | sed -n '2p' | xargs -r -n1 basename" || true)"
           if [ -z "$PREV_RELEASE" ]; then
             echo "Rollback skipped: previous release not found"
             exit 0
           fi
-          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "set -euo pipefail; TARGET=\"$CLEAN_DEPLOY_PATH/releases/$PREV_RELEASE\"; test -d \"$TARGET\"; ln -sfn \"$TARGET\" \"$CLEAN_DEPLOY_PATH/current\""
-          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "mkdir -p \"$CLEAN_BACKEND_PATH\"; cp -a \"$CLEAN_DEPLOY_PATH/current/.\" \"$CLEAN_BACKEND_PATH/\"; systemctl restart \"$SERVICE_NAME\""
+          if ! ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "set -euo pipefail; TARGET=\"$CLEAN_DEPLOY_PATH/releases/$PREV_RELEASE\"; test -d \"$TARGET\"; ln -sfn \"$TARGET\" \"$CLEAN_DEPLOY_PATH/current\""; then
+            echo "Rollback warning: failed switching current symlink"
+            exit 0
+          fi
+          if ! ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "mkdir -p \"$CLEAN_BACKEND_PATH\"; cp -a \"$CLEAN_DEPLOY_PATH/current/.\" \"$CLEAN_BACKEND_PATH/\"; systemctl restart \"$SERVICE_NAME\""; then
+            echo "Rollback warning: static/backend sync failed after symlink rollback"
+            exit 0
+          fi
           echo "Auto rollback complete: $PREV_RELEASE"
 
       - name: Notify success
