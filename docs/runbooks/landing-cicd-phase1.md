@@ -29,18 +29,22 @@ On every PR/push affecting `landing/**`:
 ## CD Flow
 Trigger: push to `main` or `release/*` with changes under `landing/**`.
 1. Build static artifact.
+   - includes `deploy-meta.txt` with `sha` and `release_id`.
 2. Upload artifact to host over SSH.
 3. Create release directory `${LANDING_DEPLOY_PATH}/releases/<release-id>`.
 4. Switch `${LANDING_DEPLOY_PATH}/current` symlink to new release.
-5. Optional backend sync:
+5. Verify marker on server (`current/deploy-meta.txt`) matches current SHA/release.
+6. Optional backend sync:
 - upload `landing/server.py` into `${LANDING_BACKEND_PATH}`
 - restart service `${LANDING_BACKEND_SERVICE}` (default: `landing`)
-6. Invalidate CDN via `LANDING_CDN_INVALIDATION_URL`.
-7. Run post-deploy check against `LANDING_SITE_URL`:
+7. Invalidate CDN via `LANDING_CDN_INVALIDATION_URL`.
+8. Run post-deploy check against `LANDING_SITE_URL`:
 - `/` returns 200
 - response body is non-empty
 - contains `data-cta-id="hero_main"`
-8. Send deploy status to `LANDING_NOTIFY_WEBHOOK_URL`.
+9. Run external marker check against `${LANDING_SITE_URL}/deploy-meta.txt?v=<release_id>`.
+10. If deploy validation fails, auto-rollback to previous release is attempted.
+11. Send deploy status to `LANDING_NOTIFY_WEBHOOK_URL`.
 
 ## Rollback
 Manual trigger: `landing-rollback` workflow.

@@ -36,6 +36,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare release id
+        run: |
+          RELEASE_ID="${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          echo "RELEASE_ID=$RELEASE_ID" >> "$GITHUB_ENV"
+
       - name: Validate required secrets
         run: |
           required=(DEPLOY_HOST DEPLOY_USER DEPLOY_PATH SITE_URL)
@@ -95,8 +100,6 @@ jobs:
 
       - name: Upload artifact to host
         run: |
-          RELEASE_ID="${GITHUB_SHA}-${GITHUB_RUN_ID}"
-          echo "RELEASE_ID=$RELEASE_ID" >> "$GITHUB_ENV"
           CLEAN_DEPLOY_PATH="$(printf '%s' "${DEPLOY_PATH:-}" | tr -d '\r' | xargs)"
           if [ -z "$CLEAN_DEPLOY_PATH" ]; then
             echo "DEPLOY_PATH is empty after normalization"
@@ -129,6 +132,12 @@ jobs:
           ls -1dt "$DEPLOY_PATH"/releases/* 2>/dev/null | tail -n +8 | xargs -r rm -rf
           EOF
 
+      - name: Verify release marker on server
+        run: |
+          CLEAN_DEPLOY_PATH="$(printf '%s' "${DEPLOY_PATH:-}" | tr -d '\r' | xargs)"
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "set -euo pipefail; test -f \"$CLEAN_DEPLOY_PATH/current/deploy-meta.txt\"; grep -q \"sha=${GITHUB_SHA}\" \"$CLEAN_DEPLOY_PATH/current/deploy-meta.txt\"; grep -q \"release_id=${RELEASE_ID}\" \"$CLEAN_DEPLOY_PATH/current/deploy-meta.txt\""
+
       - name: Sync backend API server.py and restart service
         run: |
           CLEAN_BACKEND_PATH="$(printf '%s' "${BACKEND_PATH:-/var/www/landing/landing}" | tr -d '\r' | xargs)"
@@ -150,6 +159,31 @@ jobs:
       - name: Post-deploy health-check
         run: ./scripts/post-deploy-check.sh "$SITE_URL"
 
+      - name: External marker integrity check
+        run: |
+          TARGET_URL="${SITE_URL%/}/deploy-meta.txt?v=${RELEASE_ID}"
+          BODY="$(curl -sS -L "$TARGET_URL")"
+          echo "$BODY" | grep -q "sha=${GITHUB_SHA}"
+          echo "$BODY" | grep -q "release_id=${RELEASE_ID}"
+
+      - name: Auto rollback if deploy validation failed
+        if: failure()
+        run: |
+          CLEAN_DEPLOY_PATH="$(printf '%s' "${DEPLOY_PATH:-}" | tr -d '\r' | xargs)"
+          if [ -z "$CLEAN_DEPLOY_PATH" ]; then
+            echo "Rollback skipped: DEPLOY_PATH is empty"
+            exit 0
+          fi
+          PREV_RELEASE="$(ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "ls -1dt \"$CLEAN_DEPLOY_PATH\"/releases/* 2>/dev/null | sed -n '2p' | xargs -r -n1 basename")"
+          if [ -z "$PREV_RELEASE" ]; then
+            echo "Rollback skipped: previous release not found"
+            exit 0
+          fi
+          ssh -i ~/.ssh/landing_deploy_key -o IdentitiesOnly=yes -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "set -euo pipefail; TARGET=\"$CLEAN_DEPLOY_PATH/releases/$PREV_RELEASE\"; test -d \"$TARGET\"; ln -sfn \"$TARGET\" \"$CLEAN_DEPLOY_PATH/current\""
+          echo "Auto rollback complete: $PREV_RELEASE"
+
       - name: Notify success
         if: success()
         run: |
@@ -169,7 +203,7 @@ jobs:
       - name: Notify failure
         if: failure()
         run: |
-          MESSAGE="[CI/CD] Landing deploy FAILED: ${GITHUB_REPOSITORY}@${GITHUB_SHA}. Check run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          MESSAGE="[CI/CD] Landing deploy FAILED: ${GITHUB_REPOSITORY}@${GITHUB_SHA} release=${RELEASE_ID}. Auto-rollback attempted. Check run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           if [ -n "${NOTIFY_WEBHOOK_URL:-}" ]; then
             curl -fsS -X POST "$NOTIFY_WEBHOOK_URL" \
               -H 'Content-Type: application/json' \

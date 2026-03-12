@@ -29,6 +29,16 @@ if [ -d "$ROOT_DIR/data" ]; then
   cp "$ROOT_DIR/data/.gitkeep" "$SITE_DIR/data/.gitkeep" 2>/dev/null || true
 fi
 
+# Deploy marker for post-deploy integrity checks (internal + external).
+DEPLOY_SHA="${GITHUB_SHA:-local}"
+DEPLOY_RELEASE_ID="${RELEASE_ID:-local}"
+BUILD_TS_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+cat >"$SITE_DIR/deploy-meta.txt" <<EOF
+sha=$DEPLOY_SHA
+release_id=$DEPLOY_RELEASE_ID
+built_at_utc=$BUILD_TS_UTC
+EOF
+
 TAR_NAME="landing-site-${GITHUB_SHA:-local}.tar.gz"
 tar -C "$SITE_DIR" -czf "$DIST_DIR/$TAR_NAME" .
 
