@@ -162,9 +162,28 @@ jobs:
       - name: External marker integrity check
         run: |
           TARGET_URL="${SITE_URL%/}/deploy-meta.txt?v=${RELEASE_ID}"
-          BODY="$(curl -sS -L "$TARGET_URL")"
-          echo "$BODY" | grep -q "sha=${GITHUB_SHA}"
-          echo "$BODY" | grep -q "release_id=${RELEASE_ID}"
+          echo "Checking external marker at: $TARGET_URL"
+          ok=0
+          last_body=""
+          for attempt in $(seq 1 12); do
+            last_body="$(curl -sS -L \
+              -H "Cache-Control: no-cache, no-store, max-age=0" \
+              -H "Pragma: no-cache" \
+              "$TARGET_URL" || true)"
+            if echo "$last_body" | grep -q "sha=${GITHUB_SHA}" && echo "$last_body" | grep -q "release_id=${RELEASE_ID}"; then
+              ok=1
+              echo "External marker check passed on attempt $attempt"
+              break
+            fi
+            echo "External marker not yet updated (attempt $attempt/12), retrying in 10s..."
+            sleep 10
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "External marker check failed after retries."
+            echo "Last response body:"
+            echo "$last_body"
+            exit 1
+          fi
 
       - name: Auto rollback if deploy validation failed
         if: failure()
