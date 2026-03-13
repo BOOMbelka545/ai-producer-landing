@@ -23,6 +23,12 @@ fi
 if [ -f "$ROOT_DIR/sitemap.xml" ]; then
   cp "$ROOT_DIR/sitemap.xml" "$SITE_DIR/sitemap.xml"
 fi
+if [ -f "$ROOT_DIR/favicon-96x96.png" ]; then
+  cp "$ROOT_DIR/favicon-96x96.png" "$SITE_DIR/favicon-96x96.png"
+fi
+if [ -f "$ROOT_DIR/site.webmanifest" ]; then
+  cp "$ROOT_DIR/site.webmanifest" "$SITE_DIR/site.webmanifest"
+fi
 
 if [ -d "$ROOT_DIR/data" ]; then
   mkdir -p "$SITE_DIR/data"
